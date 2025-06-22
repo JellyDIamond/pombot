@@ -13,11 +13,11 @@ interface Props {
   value: string
 }
 
-interface languageMap {
+interface LanguageMap {
   [key: string]: string | undefined
 }
 
-export const programmingLanguages: languageMap = {
+export const programmingLanguages: LanguageMap = {
   javascript: '.js',
   python: '.py',
   java: '.java',
@@ -41,11 +41,10 @@ export const programmingLanguages: languageMap = {
   sql: '.sql',
   html: '.html',
   css: '.css'
-  // add more file extensions here, make sure the key is same as language prop in CodeBlock.tsx component
 }
 
 export const generateRandomString = (length: number, lowercase = false) => {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXY3456789' // excluding similar looking characters like Z, 2, I, 1, O, 0
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXY3456789'
   let result = ''
   for (let i = 0; i < length; i++) {
     result += chars.charAt(Math.floor(Math.random() * chars.length))
@@ -57,20 +56,13 @@ const CodeBlock: FC<Props> = memo(({ language, value }) => {
   const { isCopied, copyToClipboard } = useCopyToClipboard({ timeout: 2000 })
 
   const downloadAsFile = () => {
-    if (typeof window === 'undefined') {
-      return
-    }
-    const fileExtension = programmingLanguages[language] || '.file'
-    const suggestedFileName = `file-${generateRandomString(
-      3,
-      true
-    )}${fileExtension}`
-    const fileName = window.prompt('Enter file name' || '', suggestedFileName)
+    if (typeof window === 'undefined') return
 
-    if (!fileName) {
-      // User pressed cancel on prompt.
-      return
-    }
+    const fileExtension = programmingLanguages[language] || '.file'
+    const suggestedFileName = `file-${generateRandomString(3, true)}${fileExtension}`
+    const fileName = window.prompt('Enter file name', suggestedFileName)
+
+    if (!fileName) return
 
     const blob = new Blob([value], { type: 'text/plain' })
     const url = URL.createObjectURL(blob)
