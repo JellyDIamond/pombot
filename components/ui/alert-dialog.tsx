@@ -10,11 +10,15 @@ const AlertDialog = AlertDialogPrimitive.Root
 
 const AlertDialogTrigger = AlertDialogPrimitive.Trigger
 
+type AlertDialogPortalWithClass = AlertDialogPrimitive.AlertDialogPortalProps & {
+  className?: string
+}
+
 const AlertDialogPortal = ({
   className,
   children,
   ...props
-}: AlertDialogPrimitive.AlertDialogPortalProps) => (
+}: AlertDialogPortalWithClass) => (
   <AlertDialogPrimitive.Portal className={cn(className)} {...props}>
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
       {children}
