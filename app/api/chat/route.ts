@@ -1,6 +1,7 @@
+// @ts-ignore
+import { Configuration, OpenAIApi } from 'openai-edge'
 import 'server-only'
 import { OpenAIStream, StreamingTextResponse } from 'ai'
-import { Configuration, OpenAIApi } from 'openai-edge'
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { Database } from '@/lib/db_types'
@@ -57,7 +58,7 @@ Your goals:
 1. Clarify the user’s real problem, desire, or question.
 2. Help remove what's unnecessary or distracting.
 3. Offer clean and powerful reflections — never ramble.
-  `.trim()
+`.trim()
 
   const messages = [
     {
@@ -68,7 +69,7 @@ Your goals:
   ]
 
   const res = await openai.createChatCompletion({
-    model: 'gpt-4-1106-preview', // GPT-4.1
+    model: 'gpt-4-1106-preview',
     messages,
     temperature: 0.7,
     stream: true
