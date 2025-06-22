@@ -20,6 +20,14 @@ export default async function SignInPage() {
         <div className="flex justify-center">
           <LoginButton />
         </div>
+        <form action="/api/stripe/checkout" method="POST">
+  <button
+    type="submit"
+    className="mt-6 rounded bg-black px-4 py-2 text-white hover:bg-gray-800"
+  >
+    Subscribe (€1 Test)
+  </button>
+</form>
       </div>
     </div>
   )
