@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { auth } from '@/auth'
+import { cookies } from 'next/headers' // ✅ Add this
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
 
 export async function POST(req: NextRequest) {
-  const session = await auth(req) // ✅ Fix here
+  const session = await auth({ cookieStore: cookies() }) // ✅ Correct usage
 
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
