@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { auth } from '@/auth'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!); // ✅ Only one declaration
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
 
 export async function POST(req: NextRequest) {
-  const session = await auth()
+  const session = await auth(req) // ✅ Fix here
 
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
     mode: 'payment',
     line_items: [
       {
-        price: 'price_1RcpEhIZXgla8R1Ql2mb4bBn', // 🔁 Replace this
+        price: 'price_1RcpEhIZXgla8R1Ql2mb4bBn',
         quantity: 1,
       },
     ],
