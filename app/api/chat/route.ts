@@ -1,5 +1,7 @@
 import 'server-only'
 import { OpenAIStream, StreamingTextResponse } from 'ai'
+// @ts-expect-error: openai-edge has no type declarations
+
 import { Configuration, OpenAIApi } from 'openai-edge'
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
