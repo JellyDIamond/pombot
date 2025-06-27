@@ -15,6 +15,7 @@ export interface Database {
       [_ in never]: never
     }
     Functions: {
+      
       graphql: {
         Args: {
           operationName?: string
@@ -64,7 +65,18 @@ export interface Database {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      Functions: {
+  match_chunks: {
+    Args: {
+      query_embedding: number[]
+      match_count: number
+    }
+    Returns: {
+      chunk_text: string
+    }[]
+  }
+}
+
     }
     Enums: {
       [_ in never]: never

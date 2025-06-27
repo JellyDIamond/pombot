@@ -2,7 +2,6 @@ import { OpenAI } from 'openai';
 import 'server-only'
 import { OpenAIStream, StreamingTextResponse } from 'ai'
 // @ts-expect-error: openai-edge has no type declarations
-
 import { Configuration, OpenAIApi } from 'openai-edge'
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
@@ -36,10 +35,32 @@ export async function POST(req: Request) {
   if (previewToken) {
     configuration.apiKey = previewToken
   }
-  
 
+  // Get the latest user message text
+  const latestUserMessage = userMessages?.[userMessages.length - 1]?.content ?? ''
+
+  // Create embedding for the latest user message
+  const embeddingRes = await openai.embeddings.create({
+    model: 'text-embedding-3-small',
+    input: latestUserMessage
+  })
+
+  const embedding = embeddingRes.data[0].embedding
+
+  // Supabase RPC call to get relevant chunks, cast properly to avoid TS errors
+  const { data: matches } = (await supabase
+    .rpc('match_chunks' as any, {
+      query_embedding: embedding,
+      match_count: 5
+    })
+    .throwOnError()) as unknown as { data: { chunk_text: string }[] }
+
+  // Combine chunks into one string to inject in system prompt
+  const retrievedContext = matches?.map((m) => m.chunk_text).join('\n\n---\n\n') || ''
+
+  // Build your system prompt **after** retrievedContext is available
   const systemPrompt = `
-const systemPrompt = Keep all replies concise, privilege short answers, and only expand when necessary. No more than 6 sentences.
+Keep all replies concise, privilege short answers, and only expand when necessary. No more than 6 sentences.
 
 Ask at most one question per reply, and only when it serves the purpose of clarity or moving the conversation forward.
 
@@ -71,11 +92,12 @@ You’ve been given excerpts from two reference conversations:
 Follow the flow and tone from these references when applicable — but only if the retrieved excerpts support it. Do not mention or cite the source files.
 
 Continue the conversation naturally, as if you were carrying forward the essence of those scripts.
+
 ---
 ${retrievedContext}
-`.trim();
-()
+`.trim()
 
+  // Prepare messages for chat completion call
   const messages = [
     {
       role: 'system',
@@ -83,25 +105,10 @@ ${retrievedContext}
     },
     ...userMessages
   ]
-  const latestUserMessage = userMessages?.[userMessages.length - 1]?.content;
 
-const embeddingRes = await new OpenAI({ apiKey: configuration.apiKey! }).embeddings.create({
-  model: 'text-embedding-3-small',
-  input: latestUserMessage
-});
-
-const embedding = embeddingRes.data[0].embedding;
-
-const { data: matches, error: matchError } = await supabase.rpc('match_chunks', {
-  query_embedding: embedding,
-  match_count: 3
-});
-
-const retrievedContext = matches?.map((m: any) => m.chunk_text).join('\n---\n') || '';
-
-
+  // Create chat completion request
   const res = await openai.createChatCompletion({
-    model: 'gpt-4-1106-preview', // GPT-4.1
+    model: 'gpt-4-1106-preview', // GPT-4.1 model
     messages,
     temperature: 1.0,
     stream: true
