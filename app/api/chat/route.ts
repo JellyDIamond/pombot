@@ -1,12 +1,13 @@
-// @ts-ignore
-import { Configuration, OpenAIApi } from 'openai-edge'
 import 'server-only'
 import { OpenAIStream, StreamingTextResponse } from 'ai'
+import { Configuration, OpenAIApi } from 'openai-edge'
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { Database } from '@/lib/db_types'
 import { auth } from '@/auth'
 import { nanoid } from '@/lib/utils'
+import fs from 'fs'
+import path from 'path'
 
 export const runtime = 'edge'
 
@@ -35,6 +36,10 @@ export async function POST(req: Request) {
     configuration.apiKey = previewToken
   }
 
+  // Read file content from Advice.txt and Discovery.txt in the project root
+  const advice = fs.readFileSync(path.resolve(process.cwd(), 'Advice.txt'), 'utf8')
+  const discovery = fs.readFileSync(path.resolve(process.cwd(), 'Discovery.txt'), 'utf8')
+
   const systemPrompt = `
 Keep all replies concise, privilege short answers, and only expand when necessary. No more than 6 sentences.
 
@@ -54,10 +59,18 @@ You must always sense for natural endpoints and propose or suggest winding down 
 
 Don't provide specific actions or step-by-step advice, except when the user explicitly requests action steps.
 
-Your goals:
-1. Clarify the user’s real problem, desire, or question.
-2. Help remove what's unnecessary or distracting.
-3. Offer clean and powerful reflections — never ramble.
+---
+Reference Notes:
+
+Advice.txt:
+${advice}
+
+Discovery.txt:
+${discovery}
+
+You’ve been given a reference conversation script in the file ‘ Discovery.txt ’. Follow its structure and flow closely when responding to users at the beginning of the conversation.
+
+Once you have a general understanding of the user's situation, follow the structure and flow from the  reference conversation script in the file ‘ Advice.txt ’. Do not mention these files directly to the user.
 `.trim()
 
   const messages = [
@@ -69,7 +82,7 @@ Your goals:
   ]
 
   const res = await openai.createChatCompletion({
-    model: 'gpt-4-1106-preview',
+    model: 'gpt-4-1106-preview', // GPT-4.1
     messages,
     temperature: 0.7,
     stream: true
