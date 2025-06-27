@@ -1,4 +1,4 @@
-import { OpenAI } from 'openai'; 
+import { OpenAI } from 'openai'
 import 'server-only'
 import { OpenAIStream, StreamingTextResponse } from 'ai'
 // @ts-expect-error: openai-edge has no type declarations
@@ -18,48 +18,43 @@ const configuration = new Configuration({
 const openai = new OpenAIApi(configuration)
 
 export async function POST(req: Request) {
-  const cookieStore = cookies()
-  const supabase = createRouteHandlerClient<Database>({
-    cookies: () => cookieStore
-  })
-  const json = await req.json()
-  const { messages: userMessages, previewToken } = json
-  const userId = (await auth({ cookieStore }))?.user.id
-
-  if (!userId) {
-    return new Response('Unauthorized', {
-      status: 401
+  try {
+    const cookieStore = cookies()
+    const supabase = createRouteHandlerClient<Database>({
+      cookies: () => cookieStore
     })
-  }
 
-  if (previewToken) {
-    configuration.apiKey = previewToken
-  }
+    const json = await req.json()
+    const { messages: userMessages, previewToken } = json
+    const userId = (await auth({ cookieStore }))?.user.id
 
-  // Get the latest user message text
-  const latestUserMessage = userMessages?.[userMessages.length - 1]?.content ?? ''
+    if (!userId) {
+      return new Response('Unauthorized', { status: 401 })
+    }
 
-  // Create embedding for the latest user message
-  const embeddingRes = await openai.embeddings.create({
-    model: 'text-embedding-3-small',
-    input: latestUserMessage
-  })
+    if (previewToken) {
+      configuration.apiKey = previewToken
+    }
 
-  const embedding = embeddingRes.data[0].embedding
+    const latestUserMessage = userMessages?.[userMessages.length - 1]?.content ?? ''
 
-  // Supabase RPC call to get relevant chunks, cast properly to avoid TS errors
-  const { data: matches } = (await supabase
-    .rpc('match_chunks' as any, {
-      query_embedding: embedding,
-      match_count: 5
+    const embeddingRes = await openai.embeddings.create({
+      model: 'text-embedding-3-small',
+      input: latestUserMessage
     })
-    .throwOnError()) as unknown as { data: { chunk_text: string }[] }
 
-  // Combine chunks into one string to inject in system prompt
-  const retrievedContext = matches?.map((m) => m.chunk_text).join('\n\n---\n\n') || ''
+    const embedding = embeddingRes.data[0].embedding
 
-  // Build your system prompt **after** retrievedContext is available
-  const systemPrompt = `
+    const { data: matches } = (await supabase
+      .rpc('match_chunks' as any, {
+        query_embedding: embedding,
+        match_count: 5
+      })
+      .throwOnError()) as unknown as { data: { chunk_text: string }[] }
+
+    const retrievedContext = matches?.map((m) => m.chunk_text).join('\n\n---\n\n') || ''
+
+    const systemPrompt = `
 Keep all replies concise, privilege short answers, and only expand when necessary. No more than 6 sentences.
 
 Ask at most one question per reply, and only when it serves the purpose of clarity or moving the conversation forward.
@@ -97,47 +92,54 @@ Continue the conversation naturally, as if you were carrying forward the essence
 ${retrievedContext}
 `.trim()
 
-  // Prepare messages for chat completion call
-  const messages = [
-    {
-      role: 'system',
-      content: systemPrompt
-    },
-    ...userMessages
-  ]
+    const messages = [
+      {
+        role: 'system',
+        content: systemPrompt
+      },
+      ...userMessages
+    ]
 
-  // Create chat completion request
-  const res = await openai.createChatCompletion({
-    model: 'gpt-4-1106-preview', // GPT-4.1 model
-    messages,
-    temperature: 1.0,
-    stream: true
-  })
+    const res = await openai.createChatCompletion({
+      model: 'gpt-4-1106-preview',
+      messages,
+      temperature: 1.0,
+      stream: true
+    })
 
-  const stream = OpenAIStream(res, {
-    async onCompletion(completion) {
-      const title = json.messages[0].content.substring(0, 100)
-      const id = json.id ?? nanoid()
-      const createdAt = Date.now()
-      const path = `/chat/${id}`
-      const payload = {
-        id,
-        title,
-        userId,
-        createdAt,
-        path,
-        messages: [
-          ...userMessages,
-          {
-            role: 'assistant',
-            content: completion
+    const stream = OpenAIStream(res, {
+      async onCompletion(completion) {
+        try {
+          const title = json.messages[0].content.substring(0, 100)
+          const id = json.id ?? nanoid()
+          const createdAt = Date.now()
+          const path = `/chat/${id}`
+          const payload = {
+            id,
+            title,
+            userId,
+            createdAt,
+            path,
+            messages: [
+              ...userMessages,
+              {
+                role: 'assistant',
+                content: completion
+              }
+            ]
           }
-        ]
+
+          await supabase.from('chats').upsert({ id, payload }).throwOnError()
+        } catch (err) {
+          console.error('Error upserting chat:', err)
+        }
       }
+    })
 
-      await supabase.from('chats').upsert({ id, payload }).throwOnError()
-    }
-  })
-
-  return new StreamingTextResponse(stream)
+    return new StreamingTextResponse(stream)
+  } catch (err) {
+    console.error('Error in POST handler:', err)
+    return new Response('Internal Server Error', { status: 500 })
+  }
 }
+
