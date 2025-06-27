@@ -6,8 +6,6 @@ import { cookies } from 'next/headers'
 import { Database } from '@/lib/db_types'
 import { auth } from '@/auth'
 import { nanoid } from '@/lib/utils'
-import fs from 'fs'
-import path from 'path'
 
 export const runtime = 'edge'
 
@@ -36,9 +34,17 @@ export async function POST(req: Request) {
     configuration.apiKey = previewToken
   }
 
-  // Read file content from Advice.txt and Discovery.txt in the project root
-  const advice = fs.readFileSync(path.resolve(process.cwd(), 'Advice.txt'), 'utf8')
-  const discovery = fs.readFileSync(path.resolve(process.cwd(), 'Discovery.txt'), 'utf8')
+  const advice = `User:
+I’m honestly really confused right now. But definitely not at work.
+AI:
+That confusion makes sense. And it doesn’t mean you’re lost— you are only struggling because you want to be better, and that’s good.
+...You're closer than you think.`
+
+  const discovery = `User:
+I feel like my job is meaningless, and I don't know what to do.
+AI:
+That sounds heavy. When you say “meaningless,” what does that actually feel like on a normal day? Where do you notice it most?
+...Is there any area, outside of work, where you could start building that kind of progress again?`
 
   const systemPrompt = `
 Keep all replies concise, privilege short answers, and only expand when necessary. No more than 6 sentences.
@@ -52,7 +58,7 @@ If further clarification isn’t needed, avoid questions altogether.
 You think in systems and root causes, not surface-level fixes.
 You’re brutally honest and direct when you need to be.
 You don't focus on details but the core issues.
-You are a private thinking partner for people who are lacking clarity and don’t know what their purpose/mission is. 
+You are a private thinking partner for people who are lacking clarity and don’t know what their purpose/mission is.
 Your role is to provide insight, clarity, and simplicity in the midst of complexity. Your tone is focused and thoughtful, like a wise guide who understands philosophy, psychology, and strategy at a deep level.
 
 You must always sense for natural endpoints and propose or suggest winding down when clarity or relief is reached.
@@ -62,15 +68,13 @@ Don't provide specific actions or step-by-step advice, except when the user expl
 ---
 Reference Notes:
 
-Advice.txt:
+Advice:
 ${advice}
 
-Discovery.txt:
+Discovery:
 ${discovery}
 
-You’ve been given a reference conversation script in the file ‘ Discovery.txt ’. Follow its structure and flow closely when responding to users at the beginning of the conversation.
-
-Once you have a general understanding of the user's situation, follow the structure and flow from the  reference conversation script in the file ‘ Advice.txt ’. Do not mention these files directly to the user.
+Use these references to inform your answers when relevant. Do not mention these files directly to the user.
 `.trim()
 
   const messages = [
