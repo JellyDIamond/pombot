@@ -73,19 +73,20 @@ export async function POST(req: Request) {
     store: true,
   });
 
-  // ✅ Cast safely
-  const typedResponse = response as unknown as ResponsesOutput;
-  const output = typedResponse.output;
+ // ✅ Cast safely
+const outputs = (response as any).outputs;
 
-  let assistantOutput = "";
+let assistantOutput = "";
 
-  if (output.type === "message") {
-    assistantOutput = output.message?.content ?? "";
-  } else if (output.type === "text") {
-    assistantOutput = output.text ?? "";
-  } else {
-    console.error("Unknown output type:", output);
-  }
+const first = outputs?.[0];
+
+if (first?.type === "message") {
+  assistantOutput = first.message?.content ?? "";
+} else if (first?.type === "text") {
+  assistantOutput = first.text ?? "";
+} else {
+  console.error("Unknown output type:", first);
+}
 
   const id = json.id ?? nanoid();
   const createdAt = Date.now();
