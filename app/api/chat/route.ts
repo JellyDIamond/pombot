@@ -38,7 +38,8 @@ export async function POST(req: Request) {
     return new Response("Unauthorized", { status: 401 });
   }
 
-  const response = await openai.responses.create({
+  const response = await openai.responses.create({ 
+    
     model: "gpt-4.1",
     input: [
       {
@@ -72,6 +73,15 @@ export async function POST(req: Request) {
     top_p: 1,
     store: true,
   });
+  console.log("Full OpenAI response:", JSON.stringify(response, null, 2));
+
+const output = (response as any).output;
+
+if (!output) {
+  console.error("No output field found in response:", response);
+  return new Response("No output from OpenAI", { status: 500 });
+}
+
 
  // ✅ Cast safely
 const outputs = (response as any).outputs;
