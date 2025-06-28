@@ -83,20 +83,28 @@ if (!output) {
 }
 
 
- // ✅ Cast safely
-const outputs = (response as any).outputs;
+
+
+if (!output || !Array.isArray(output) || output.length === 0) {
+  console.error("No output or empty output in response:", response);
+  return new Response("No output from OpenAI", { status: 500 });
+}
+
+const firstOutput = output[0];
 
 let assistantOutput = "";
 
-const first = outputs?.[0];
-
-if (first?.type === "message") {
-  assistantOutput = first.message?.content ?? "";
-} else if (first?.type === "text") {
-  assistantOutput = first.text ?? "";
+if (firstOutput.type === "message") {
+  assistantOutput = firstOutput.content
+    .filter((c: any) => c.type === "output_text")
+    .map((c: any) => c.text)
+    .join("\n");
+} else if (firstOutput.type === "text") {
+  assistantOutput = firstOutput.text ?? "";
 } else {
-  console.error("Unknown output type:", first);
+  console.error("Unknown output type:", firstOutput);
 }
+
 
   const id = json.id ?? nanoid();
   const createdAt = Date.now();
