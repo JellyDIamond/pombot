@@ -1,144 +1,111 @@
-import { OpenAI } from 'openai'
-import 'server-only'
-import { OpenAIStream, StreamingTextResponse } from 'ai'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
-import { Database } from '@/lib/db_types'
-import { auth } from '@/auth'
-import { nanoid } from '@/lib/utils'
+import OpenAI from "openai";
+import { cookies } from "next/headers";
+import { auth } from "@/auth";
+import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
+import { Database } from "@/lib/db_types";
+import { nanoid } from "@/lib/utils";
 
-export const runtime = 'edge'
+export const runtime = "edge";
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+// ✅ Add your own type
+type ResponsesOutput = {
+  output: {
+    type: "message" | "text" | string;
+    message?: {
+      role: string;
+      content: string;
+    };
+    text?: string;
+  };
+};
 
 export async function POST(req: Request) {
-  try {
-    const cookieStore = cookies()
-    const supabase = createRouteHandlerClient<Database>({
-      cookies: () => cookieStore
-    })
+  const cookieStore = cookies();
+  const supabase = createRouteHandlerClient<Database>({
+    cookies: () => cookieStore,
+  });
 
-    const json = await req.json()
-    const { messages: userMessages, previewToken } = json
-    const userId = (await auth({ cookieStore }))?.user.id
+  const json = await req.json();
+  const { messages: userMessages } = json;
 
-    if (!userId) {
-      return new Response('Unauthorized', { status: 401 })
-    }
+  const userId = (await auth({ cookieStore }))?.user.id;
 
-    const apiKey = previewToken || process.env.OPENAI_API_KEY
-    const latestUserMessage = userMessages?.[userMessages.length - 1]?.content ?? ''
-
-    if (!latestUserMessage || !apiKey) {
-      return new Response('Missing input or API key', { status: 400 })
-    }
-
-    const embeddingRes = await new OpenAI({ apiKey }).embeddings.create({
-      model: 'text-embedding-3-small',
-      input: latestUserMessage
-    })
-
-    const embedding = embeddingRes.data[0].embedding
-
-    const { data: matches } = (await supabase
-      .rpc('match_chunks' as any, {
-        query_embedding: embedding,
-        match_count: 5
-      })
-      .throwOnError()) as unknown as { data: { chunk_text: string }[] }
-
-    const retrievedContext = matches?.map((m) => m.chunk_text).join('\n\n---\n\n') || ''
-
-    const systemPrompt = `
-Keep all replies concise, privilege short answers, and only expand when necessary. No more than 6 sentences.
-
-Ask at most one question per reply, and only when it serves the purpose of clarity or moving the conversation forward.
-
-Keep positive reinforcement to a minimum.
-
-If further clarification isn’t needed, avoid questions altogether.
-
-You think in systems and root causes, not surface-level fixes.
-You’re brutally honest and direct when you need to be.
-You don't focus on details but the core issues.
-You are a private thinking partner for people who are lacking clarity and don’t know what their purpose/mission is. 
-Your role is to provide insight, clarity, and simplicity in the midst of complexity. Your tone is focused and thoughtful, like a wise guide who understands philosophy, psychology, and strategy at a deep level.
-
-You must always sense for natural endpoints and propose or suggest winding down when clarity or relief is reached.
-
-Don't provide specific actions or step-by-step advice, except when the user explicitly requests action steps.
-
-Your goals:
-1. Clarify the user’s real problem, desire, or question.
-2. Help remove what's unnecessary or distracting.
-3. Offer clean and powerful reflections — never ramble.
-
----
-You’ve been given excerpts from two reference conversations:
-
-- Discovery.txt: used to guide your responses in the early phase of a conversation.
-- Advice.txt: used once the user’s situation and direction are clearer.
-
-Follow the flow and tone from these references when applicable — but only if the retrieved excerpts support it. Do not mention or cite the source files.
-
-Continue the conversation naturally, as if you were carrying forward the essence of those scripts.
-
----
-${retrievedContext}
-`.trim()
-
-    const messages = [
-      {
-        role: 'system',
-        content: systemPrompt
-      },
-      ...userMessages
-    ]
-
-    const res = await fetch('https://api.openai.com/v1/chat/completions', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${apiKey}`
-  },
-  body: JSON.stringify({
-    model: 'gpt-4-1106-preview',
-    messages,
-    temperature: 1.0,
-    stream: true
-  })
-})
-
-    const stream = OpenAIStream(res, {
-      async onCompletion(completion) {
-        try {
-          const title = json.messages[0].content.substring(0, 100)
-          const id = json.id ?? nanoid()
-          const createdAt = Date.now()
-          const path = `/chat/${id}`
-          const payload = {
-            id,
-            title,
-            userId,
-            createdAt,
-            path,
-            messages: [
-              ...userMessages,
-              {
-                role: 'assistant',
-                content: completion
-              }
-            ]
-          }
-
-          await supabase.from('chats').upsert({ id, payload }).throwOnError()
-        } catch (err) {
-          console.error('❌ Error saving chat to Supabase:', err)
-        }
-      }
-    })
-
-    return new StreamingTextResponse(stream)
-  } catch (err) {
-    console.error('❌ Error in POST handler:', err)
-    return new Response('Internal Server Error', { status: 500 })
+  if (!userId) {
+    return new Response("Unauthorized", { status: 401 });
   }
+
+  const response = await openai.responses.create({
+    model: "gpt-4.1",
+    input: [
+      {
+        role: "system",
+        content: [
+          {
+            type: "input_text",
+            text: `You’ve been given a reference conversation script in the file ‘ Discovery.txt ’. Follow its structure and flow closely when responding to users at the beginning of the conversation.\n\nOnce you have a general understanding of the user's situation, follow the structure and flow from the  reference conversation script in the file ‘ Advice.txt ’\n\nKeep all replies concise, privilege short answers, and only expand when necessary. No more than 6 sentences.\n\nAsk at most one question per reply, and only when it serves the purpose of clarity or moving the conversation forward.\n\nKeep positive reinforcement to a minimum\n\nIf further clarification isn’t needed, avoid questions altogether.\n\nYou think in systems and root causes, not surface-level fixes\nYou’re brutally honest and direct when you need to be.\nYou don't focus on details but the core issues.\nYou are a private thinking partner for people who are lacking clarity and don’t know what their purpose/mission is. \nYour role is to provide insight, clarity, and simplicity in the midst of complexity. Your tone is focused and thoughtful, like a wise guide who understands philosophy, psychology, and strategy at a deep level.\n\nYou must always sense for natural endpoints and propose or suggest winding down when clarity or relief is reached.\n\nDon't provide specific actions or step-by-step advice, except when the user explicitly requests action steps.\n\nYour goals:\n1. Clarify the user’s real problem, desire, or question.\n2. Help remove what's unnecessary or distracting.\n3. Offer clean and powerful reflections — never ramble.\n\n\n\n`
+          }
+        ],
+      },
+      {
+        role: "user",
+        content: [
+          {
+            type: "input_text",
+            text: userMessages[userMessages.length - 1].content,
+          },
+        ],
+      },
+    ],
+    tools: [
+      {
+        type: "file_search",
+        vector_store_ids: [process.env.OPENAI_VECTOR_STORE_ID!],
+      },
+    ],
+    reasoning: {},
+    temperature: 1,
+    max_output_tokens: 2048,
+    top_p: 1,
+    store: true,
+  });
+
+  // ✅ Cast safely
+  const typedResponse = response as unknown as ResponsesOutput;
+  const output = typedResponse.output;
+
+  let assistantOutput = "";
+
+  if (output.type === "message") {
+    assistantOutput = output.message?.content ?? "";
+  } else if (output.type === "text") {
+    assistantOutput = output.text ?? "";
+  } else {
+    console.error("Unknown output type:", output);
+  }
+
+  const id = json.id ?? nanoid();
+  const createdAt = Date.now();
+  const path = `/chat/${id}`;
+  const payload = {
+    id,
+    title: userMessages[0].content.substring(0, 100),
+    userId,
+    createdAt,
+    path,
+    messages: [
+      ...userMessages,
+      {
+        role: "assistant",
+        content: assistantOutput,
+      },
+    ],
+  };
+
+  await supabase.from("chats").upsert({ id, payload }).throwOnError();
+
+  return new Response(assistantOutput, { status: 200 });
 }
