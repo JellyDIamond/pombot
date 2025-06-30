@@ -82,11 +82,17 @@ Your goals:
       }
     ],
   },
-  ...userMessages.map((msg) => ({
-    role: msg.role,
-    content: msg.content // ✅ not wrapped in an array
-  }))
-],
+     ...userMessages.map((msg) => ({
+      role: msg.role,
+      // ✅ Tell TypeScript to chill — this is valid for the API:
+      content: [
+        {
+          type: msg.role === "assistant" ? "output_text" : "input_text",
+          text: msg.content,
+        },
+      ],
+    })),
+  ] as any,
     tools: [
       {
         type: "file_search",
