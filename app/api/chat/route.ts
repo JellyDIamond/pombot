@@ -53,7 +53,7 @@ const { messages: userMessages }: { messages: ChatMessage[] } = json;
         type: "input_text",
         text: `You’ve been given a reference conversation script in the file ‘ Discovery.txt ’. Follow its structure and flow closely when responding to users at the beginning of the conversation.
 
-Once you have a general understanding of the user's situation, follow the structure and flow from the  reference conversation script in the file ‘ Advice.txt ’
+Once you have a general understanding of the user's situation, follow the structure and flow from the  reference conversation script in the file ‘ Advice.txt ’ You must always consult the file_search tool to retrieve relevant context for your answers — do not rely only on your own knowledge.
 
 Keep all replies concise, privilege short answers, and only expand when necessary. No more than 6 sentences.
 
