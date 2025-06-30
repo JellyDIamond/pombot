@@ -48,7 +48,7 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
         }
       }
     })
-  return (
+    return (
     <>
       <div className={cn('pb-[200px] pt-4 md:pt-10', className)}>
         {messages.length ? (
@@ -83,7 +83,7 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
               >
                 signing up
               </a>{' '}
-              on the OpenAI website. This is only necessary for preview
+               on the OpenAI website. This is only necessary for preview
               environments so that the open source community can test the app.
               The token will be saved to your browser&apos;s local storage under
               the name <code className="font-mono">ai-token</code>.
