@@ -105,27 +105,23 @@ Your goals:
 
   console.log("Full OpenAI response:", JSON.stringify(response, null, 2));
 
-  const output = (response as any).output;
+ const output = (response as any).output;
 
-  if (!output || !Array.isArray(output) || output.length === 0) {
-    console.error("No output or empty output in response:", response);
-    return new Response("No output from OpenAI", { status: 500 });
-  }
+if (!output) {
+  console.error("No output field found in response:", response);
+  return new Response("No output from OpenAI", { status: 500 });
+}
 
-  const firstOutput = output[0];
+let assistantOutput = "";
 
-  let assistantOutput = "";
+if (output.type === "message") {
+  assistantOutput = output.message?.content ?? "";
+} else if (output.type === "text") {
+  assistantOutput = output.text ?? "";
+} else {
+  console.error("Unknown output type:", output);
+}
 
-  if (firstOutput.type === "message") {
-    assistantOutput = firstOutput.content
-      .filter((c: any) => c.type === "output_text")
-      .map((c: any) => c.text)
-      .join("\n");
-  } else if (firstOutput.type === "text") {
-    assistantOutput = firstOutput.text ?? "";
-  } else {
-    console.error("Unknown output type:", firstOutput);
-  }
 
   const id = json.id ?? nanoid();
   const createdAt = Date.now();
