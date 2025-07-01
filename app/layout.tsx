@@ -1,5 +1,6 @@
 import { Metadata } from 'next'
-
+import { cookies } from 'next/headers'
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Toaster } from 'react-hot-toast'
 
 import '@/app/globals.css'
@@ -30,7 +31,15 @@ interface RootLayoutProps {
   children: React.ReactNode
 }
 
-export default function RootLayout({ children }: RootLayoutProps) {
+export default async function RootLayout({ children }: RootLayoutProps) {
+  // ✅ Create Supabase server client
+  const supabase = createServerComponentClient({ cookies })
+
+  // ✅ Get session
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head />
@@ -44,8 +53,8 @@ export default function RootLayout({ children }: RootLayoutProps) {
         <Toaster />
         <Providers attribute="class" defaultTheme="system" enableSystem>
           <div className="flex min-h-screen flex-col">
-            {/* @ts-ignore */}
-            <HeaderClient />
+            {/* ✅ Pass session to HeaderClient */}
+            <HeaderClient session={session} />
             <main className="flex flex-1 flex-col bg-muted/50">{children}</main>
           </div>
           <TailwindIndicator />
@@ -54,3 +63,4 @@ export default function RootLayout({ children }: RootLayoutProps) {
     </html>
   )
 }
+
