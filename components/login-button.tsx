@@ -19,11 +19,52 @@ export function LoginButton({
   ...props
 }: LoginButtonProps) {
   const [isLoading, setIsLoading] = React.useState(false)
-  // Create a Supabase client configured to use cookies
+  const [user, setUser] = React.useState<any>(null)
   const supabase = createClientComponentClient()
+
+  React.useEffect(() => {
+    async function getUser() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      setUser(user)
+    }
+    getUser()
+
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+    })
+
+    return () => {
+      listener?.subscription.unsubscribe()
+    }
+  }, [supabase])
 
   if (process.env.NEXT_PUBLIC_AUTH_GITHUB !== 'true') {
     return null
+  }
+
+  if (user) {
+    return (
+      <div className={cn('flex items-center space-x-4', className)}>
+  <span>Hello, {user.user_metadata?.full_name || user.email}</span>
+  <Button
+    variant="outline"
+    size="sm"
+    onClick={async () => {
+      setIsLoading(true)
+      await supabase.auth.signOut()
+      setUser(null)
+      setIsLoading(false)
+    }}
+    disabled={isLoading}
+    {...props} // apply props here if needed for button
+  >
+    Logout
+  </Button>
+</div>
+
+    )
   }
 
   return (
@@ -33,8 +74,9 @@ export function LoginButton({
         setIsLoading(true)
         await supabase.auth.signInWithOAuth({
           provider: 'github',
-          options: { redirectTo: `${location.origin}/api/auth/callback` }
+          options: { redirectTo: `${location.origin}/api/auth/callback` },
         })
+        setIsLoading(false)
       }}
       disabled={isLoading}
       className={cn(className)}
