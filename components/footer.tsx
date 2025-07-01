@@ -1,5 +1,5 @@
 import React from 'react'
 
-export function FooterText() {
+export function FooterText(props: React.ComponentProps<'p'>) {
   return null
 }
