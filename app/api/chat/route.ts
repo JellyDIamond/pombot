@@ -181,5 +181,26 @@ if (firstOutput.type === "message") {
   created_at: new Date().toISOString(),
 }).throwOnError();
 
+// ------------------- INSERT INDIVIDUAL MESSAGES TO DB -------------------
+
+const messageInserts = [
+  ...userMessages.map((msg) => ({
+    user_id: userId,
+    chat_id: id,
+    role: msg.role,
+    content: msg.content,
+    created_at: new Date().toISOString(),
+  })),
+  {
+    user_id: userId,
+    chat_id: id,
+    role: "assistant",
+    content: assistantOutput,
+    created_at: new Date().toISOString(),
+  },
+];
+
+await supabase.from("messages").insert(messageInserts).throwOnError();
+
   return new Response(assistantOutput, { status: 200 });
 }
