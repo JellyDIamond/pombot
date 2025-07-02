@@ -46,7 +46,7 @@ const { messages: userMessages }: { messages: ChatMessage[] } = json;
   const today = new Date().toISOString().split('T')[0];
 
 const { count, error: countError } = await supabase
-  .from('chats')
+  .from('messages')
   .select('*', { count: 'exact', head: true })
   .eq('user_id', userId)
   .gte('created_at', `${today}T00:00:00.000Z`);
