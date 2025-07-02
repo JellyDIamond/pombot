@@ -57,7 +57,7 @@ if (countError) {
   return new Response("Internal error", { status: 500 });
 }
 
-if (count >= 20) {
+if ((count ?? 0) >= 20) {
   return new Response("Daily limit reached. Come back tomorrow for more clarity.", {
     status: 403,
   });
