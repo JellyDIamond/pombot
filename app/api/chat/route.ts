@@ -42,6 +42,25 @@ const { messages: userMessages }: { messages: ChatMessage[] } = json;
     return new Response("Unauthorized", { status: 401 });
   }
 
+  const today = new Date().toISOString().split('T')[0];
+
+const { count, error: countError } = await supabase
+  .from('chats')
+  .select('*', { count: 'exact', head: true })
+  .eq('user_id', userId)
+  .gte('created_at', `${today}T00:00:00.000Z`);
+
+console.log("Usage check → user:", userId, "| date:", today, "| count:", count, "| error:", countError);
+
+if (countError) {
+  return new Response("Internal error (usage limit check)", { status: 500 });
+}
+
+if ((count ?? 0) >= 20) {
+  return new Response("Daily limit reached. Come back tomorrow.", { status: 403 });
+}
+
+
   // -------------- DAILY USAGE LIMIT CHECK ----------------
 
 const today = new Date().toISOString().split('T')[0];
