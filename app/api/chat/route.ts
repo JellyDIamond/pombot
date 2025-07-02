@@ -1,3 +1,4 @@
+import { randomUUID } from "crypto";
 import OpenAI from "openai";
 import { cookies } from "next/headers";
 import { auth } from "@/auth";
