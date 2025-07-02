@@ -38,26 +38,56 @@ export async function POST(req: NextRequest) {
       return new NextResponse("No email in session", { status: 400 });
     }
 
-    // Upsert user in Supabase (this creates or updates the user)
+    // Check if user exists in Supabase Auth
+    const { data: authUser, error: authError } = await supabase
+      .from("auth.users")
+      .select("id")
+      .eq("email", email)
+      .limit(1)
+      .single();
+
+    if (authError && authError.code !== 'PGRST116') { // PGRST116 = no rows found, ignore
+      console.error("Failed to query auth user:", authError);
+      return new NextResponse("Supabase error", { status: 500 });
+    }
+
+    let userId = authUser?.id;
+
+    if (!userId) {
+      // Create user with confirmed email but no password
+      const { data, error: createError } = await supabase.auth.admin.createUser({
+        email,
+        email_confirm: true,
+      });
+      if (createError || !data?.user) {
+        console.error("Failed to create auth user:", createError);
+        return new NextResponse("Supabase error", { status: 500 });
+      }
+      userId = data.user.id;
+    }
+
+    // Upsert user in your users table with password_set flag = false
     const { error: upsertError } = await supabase.from("users").upsert({
+      id: userId,
       email,
       role: "user",
       daily_limit_remaining: 20,
+      password_set: false,
     });
 
     if (upsertError) {
       console.error("Failed to upsert user:", upsertError);
-      return new NextResponse("Supabase upsert error", { status: 500 });
+      return new NextResponse("Supabase error", { status: 500 });
     }
 
-    // Send magic link email
+    // Send magic link email so user can log in and set password
     const { error: inviteError } = await supabase.auth.admin.inviteUserByEmail(email);
     if (inviteError) {
       console.error("Failed to send magic link:", inviteError);
       return new NextResponse("Magic link error", { status: 500 });
     }
 
-    console.log(`User ${email} upserted and magic link sent`);
+    console.log(`User ${email} created/upserted and magic link sent`);
   }
 
   return new NextResponse("Webhook received", { status: 200 });
