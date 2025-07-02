@@ -41,7 +41,9 @@ const { messages: userMessages }: { messages: ChatMessage[] } = json;
   if (!userId) {
     return new Response("Unauthorized", { status: 401 });
   }
-// -------------- DAILY USAGE LIMIT CHECK ----------------
+
+  // -------------- DAILY USAGE LIMIT CHECK ----------------
+
 const today = new Date().toISOString().split('T')[0];
 
 const { count, error: countError } = await supabase
@@ -60,6 +62,7 @@ if (count >= 20) {
     status: 403,
   });
 }
+
 // -------------------------------------------------------
 
   const response = await openai.responses.create({ 
@@ -176,7 +179,12 @@ if (firstOutput.type === "message") {
     ],
   };
 
-  await supabase.from("chats").upsert({ id, payload }).throwOnError();
+  await supabase.from("chats").upsert({
+  id,
+  user_id: userId, // make sure this is passed directly too
+  payload,
+  created_at: new Date().toISOString(),
+}).throwOnError();
 
   return new Response(assistantOutput, { status: 200 });
 }
