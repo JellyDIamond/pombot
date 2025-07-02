@@ -60,30 +60,6 @@ if ((count ?? 0) >= 20) {
   return new Response("Daily limit reached. Come back tomorrow.", { status: 403 });
 }
 
-
-  // -------------- DAILY USAGE LIMIT CHECK ----------------
-
-const today = new Date().toISOString().split('T')[0];
-
-const { count, error: countError } = await supabase
-  .from('chats')
-  .select('*', { count: 'exact', head: true })
-  .eq('user_id', userId)
-  .gte('created_at', `${today}T00:00:00.000Z`);
-
-if (countError) {
-  console.error("Error checking usage limit:", countError);
-  return new Response("Internal error", { status: 500 });
-}
-
-if ((count ?? 0) >= 20) {
-  return new Response("Daily limit reached. Come back tomorrow for more clarity.", {
-    status: 403,
-  });
-}
-
-// -------------------------------------------------------
-
   const response = await openai.responses.create({ 
     
     model: "gpt-4.1",
