@@ -18,6 +18,7 @@ export async function POST(req: NextRequest) {
   const sig = req.headers.get("stripe-signature");
 
   if (!sig || !endpointSecret) {
+    console.error("Missing signature or webhook secret");
     return new NextResponse("Missing signature or webhook secret", { status: 400 });
   }
 
@@ -34,19 +35,37 @@ export async function POST(req: NextRequest) {
     const email = session.customer_details?.email;
 
     if (!email) {
-      console.error("No email found in checkout session");
+      console.error("❌ No email found in checkout session");
       return new NextResponse("No email in session", { status: 400 });
     }
 
-    // Add email to allowed_emails table in Supabase
-    const { error } = await supabase.from("allowed_emails").upsert({ email });
+    // 1. Add to allowed_emails
+    const { error: emailError } = await supabase
+      .from("allowed_emails")
+      .upsert({ email });
 
-    if (error) {
-      console.error("Failed to insert into allowed_emails:", error);
+    if (emailError) {
+      console.error("❌ Failed to insert into allowed_emails:", emailError);
       return new NextResponse("Supabase insert error", { status: 500 });
     }
 
-    console.log(`✅ Email ${email} added to allowed_emails`);
+    // 2. Add to users table
+    const { error: userError } = await supabase
+      .from("users")
+      .upsert({
+        email,
+        is_paid: true,
+        created_at: new Date().toISOString(),
+        role: "user",
+        daily_limit_remaining: 10,
+      }, { onConflict: 'email' }); // optional if email is unique
+
+    if (userError) {
+      console.error("❌ Failed to insert into users:", userError);
+      return new NextResponse("User insert error", { status: 500 });
+    }
+
+    console.log(`✅ Email ${email} added to allowed_emails and users`);
   }
 
   return new NextResponse("Webhook received", { status: 200 });
