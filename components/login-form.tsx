@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createPagesBrowserClient } from '@supabase/auth-helpers-nextjs'
 
 import { Button } from '@/components/ui/button'
 import { IconSpinner } from '@/components/ui/icons'
@@ -22,9 +22,6 @@ export function LoginForm({
 }: LoginFormProps) {
   const [isLoading, setIsLoading] = React.useState(false)
   const router = useRouter()
-  // Create a Supabase client configured to use cookies
-  const supabase = createClientComponentClient()
-
   const [formState, setFormState] = React.useState<{
     email: string
     password: string
@@ -32,6 +29,8 @@ export function LoginForm({
     email: '',
     password: ''
   })
+
+  const supabase = createPagesBrowserClient()
 
   const signIn = async () => {
     const { email, password } = formState
@@ -44,14 +43,30 @@ export function LoginForm({
 
   const signUp = async () => {
     const { email, password } = formState
+
+    // ✅ Manually check if email is in allowed_emails
+    const { data: allowed, error: checkError } = await supabase
+      .from('allowed_emails')
+      .select('email')
+      .eq('email', email)
+      .maybeSingle()
+
+    if (checkError || !allowed) {
+      toast.error('This email is not eligible. Please complete payment first.')
+      return { message: 'Not allowed to sign up' }
+    }
+
+    // Proceed to sign up
     const { error, data } = await supabase.auth.signUp({
       email,
       password,
       options: { emailRedirectTo: `${location.origin}/api/auth/callback` }
     })
 
-    if (!error && !data.session)
+    if (!error && !data.session) {
       toast.success('Check your inbox to confirm your email address!')
+    }
+
     return error
   }
 
