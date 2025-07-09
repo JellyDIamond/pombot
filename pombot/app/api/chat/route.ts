@@ -46,7 +46,7 @@ export async function POST(req: Request) {
   if (countError) {
     return new Response('Failed to check chat limit', { status: 500 })
   }
-  if ((chatCount ?? 0) >= 30) {
+  if ((chatCount ?? 0) >= 300) {
     return new Response('Monthly chat limit reached (30).', { status: 403 })
   }
 
