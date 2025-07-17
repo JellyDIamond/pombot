@@ -49,7 +49,7 @@
     --card: 30 100% 50%;            /* Strong bright orange chatbox background */
     --card-foreground: 0 0% 0%;     /* Black text inside chatbox */
 
-    --border: 30 100% 40%;          /* Darker orange border */
+    --border: transparent;          /* 🔧 Changed from orange to transparent */
     --input: 30 100% 40%;
 
     --primary: 35 100% 70%;
@@ -69,18 +69,8 @@
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
+  /* Removed universal border style */
   body {
     @apply bg-background text-foreground;
-  }
-
-  /* Remove borders between chat replies in dark mode */
-  .dark .chat-reply {
-    border-top-color: transparent !important;
-    border-bottom-color: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
   }
 }
