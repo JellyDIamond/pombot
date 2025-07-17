@@ -92,7 +92,7 @@ function IconNextChat({
 function IconOpenAI({ className, ...props }: React.ComponentProps<'img'>) {
   return (
     <img
-      src="/final-white.png"
+      src="/final-black.png"
       alt="My Logo"
       className={cn("h-4 w-4", className)}
       {...props}
