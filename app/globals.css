@@ -72,7 +72,11 @@
   }
 
   /* Remove unwanted borders between messages in both modes */
+  .chatbox {
+    border: 2px solid var(--border);
+  }
   .divide-y > * + * {
     border-top-color: transparent !important;
+    border-top-width: 0 !important;
   }
 }
