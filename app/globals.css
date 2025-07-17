@@ -65,6 +65,13 @@
     --destructive-foreground: 0 0% 98%;
 
     --ring: 35 80% 65%;
+
+    /* Remove borders inside chat messages in dark mode */
+    .chat-message,
+    .chat-message * {
+      border-color: transparent !important;
+      box-shadow: none !important;
+    }
   }
 }
 
