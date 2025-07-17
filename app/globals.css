@@ -71,7 +71,14 @@
     @apply bg-background text-foreground;
   }
 
-  /* Remove unwanted borders between messages in both modes */
+  /* Remove unwanted borders between replies/messages in both modes */
+  .chatbox-reply,
+  .chatbox-message {
+    border-top: none !important;
+    border-bottom: none !important;
+  }
+
+  /* Chatbox border uses --border variable for color */
   .chatbox {
     border: 2px solid var(--border);
   }
