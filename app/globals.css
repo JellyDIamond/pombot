@@ -16,8 +16,8 @@
     --card: 0 0% 100%;
     --card-foreground: 240 10% 3.9%;
 
-    --border: transparent;
-    --input: transparent;
+    --border: 240 5% 91%;
+    --input: 240 5% 91%;
 
     --primary: 240 5.9% 10%;
     --primary-foreground: 0 0% 98%;
@@ -26,7 +26,7 @@
     --secondary-foreground: 240 5.9% 10%;
 
     --accent: 240 4.8% 95.9%;
-    --accent-foreground: ;
+    --accent-foreground: 240 5.9% 10%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
@@ -36,8 +36,8 @@
   }
 
   .dark {
-    --background: 0 0% 0%;
-    --foreground: 35 100% 88%;
+    --background: 0 0% 0%;          /* Page background black */
+    --foreground: 35 100% 88%;      /* Text color */
 
     --muted: 25 20% 15%;
     --muted-foreground: 35 80% 70%;
@@ -45,10 +45,10 @@
     --popover: 0 0% 0%;
     --popover-foreground: 35 100% 88%;
 
-    --card: 30 100% 50%;
-    --card-foreground: 0 0% 0%;
+    --card: 30 100% 50%;            /* Chatbox background orange */
+    --card-foreground: 0 0% 0%;     /* Text inside chatbox black */
 
-    --border: 30 100% 40%;        /* Orange borders in dark mode */
+    --border: 30 100% 40%;          /* ✅ ORANGE border for cards and chatbox */
     --input: 30 100% 40%;
 
     --primary: 35 100% 70%;
@@ -65,26 +65,14 @@
 
     --ring: 35 80% 65%;
   }
-}
 
-@layer base {
-  * {
-    @apply border-border;
-  }
-
+  /* Only apply bg/text globally, NOT borders */
   body {
     @apply bg-background text-foreground;
   }
 
-  /* 👇 Kill chat reply borders explicitly */
-  .dark .chat-reply {
-    border-top-width: 0 !important;
-    border-bottom-width: 0 !important;
-    border-color: transparent !important;
-  }
-
-  /* 👇 Optional: force borders to be orange elsewhere */
-  .dark *:not(.chat-reply) {
-    border-color: hsl(var(--border)) !important;
+  /* ✅ Fix: remove unwanted borders between messages */
+  .dark .divide-y > * + * {
+    border-top-color: transparent !important;
   }
 }
