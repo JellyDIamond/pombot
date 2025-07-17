@@ -91,12 +91,22 @@ function IconNextChat({
 
 function IconOpenAI({ className, ...props }: React.ComponentProps<'img'>) {
   return (
-    <img
-      src="/final-black.png"
-      alt="My Logo"
-      className={cn("h-4 w-4", className)}
-      {...props}
-    />
+    <>
+      {/* Light mode logo */}
+      <img
+        src="/final-white.png"
+        alt="My Logo Light"
+        className={cn("h-4 w-4 block dark:hidden", className)}
+        {...props}
+      />
+      {/* Dark mode logo */}
+      <img
+        src="/final-black.png"
+        alt="My Logo Dark"
+        className={cn("h-4 w-4 hidden dark:block", className)}
+        {...props}
+      />
+    </>
   );
 }
 

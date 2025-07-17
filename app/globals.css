@@ -37,36 +37,35 @@
   }
 
   .dark {
-  --background: 25 15% 10%; /* dark warm brown-orange */
-  --foreground: 35 100% 88%; /* soft light orange */
+    --background: 0 0% 0%;          /* Black background */
+    --foreground: 35 100% 88%;      /* Soft light orange text */
 
-  --muted: 25 10% 20%;
-  --muted-foreground: 35 80% 70%;
+    --muted: 25 20% 15%;            /* Dark muted orange */
+    --muted-foreground: 35 80% 70%;
 
-  --popover: 25 15% 10%;
-  --popover-foreground: 35 100% 88%;
+    --popover: 0 0% 0%;             /* Black */
+    --popover-foreground: 35 100% 88%;
 
-  --card: 25 15% 12%;
-  --card-foreground: 35 100% 88%;
+    --card: 30 100% 50%;            /* Strong bright orange chatbox background */
+    --card-foreground: 0 0% 0%;     /* Black text inside chatbox */
 
-  --border: 25 10% 30%;
-  --input: 25 10% 30%;
+    --border: 30 100% 40%;          /* Darker orange border */
+    --input: 30 100% 40%;
 
-  --primary: 35 100% 70%;
-  --primary-foreground: 25 15% 10%;
+    --primary: 35 100% 70%;
+    --primary-foreground: 0 0% 0%;
 
-  --secondary: 25 10% 25%;
-  --secondary-foreground: 35 100% 85%;
+    --secondary: 25 10% 25%;
+    --secondary-foreground: 35 100% 85%;
 
-  --accent: 30 60% 40%;
-  --accent-foreground: 35 100% 90%;
+    --accent: 30 60% 40%;
+    --accent-foreground: 35 100% 90%;
 
-  --destructive: 0 60% 50%;
-  --destructive-foreground: 0 0% 98%;
+    --destructive: 0 60% 50%;
+    --destructive-foreground: 0 0% 98%;
 
-  --ring: 35 80% 65%;
-}
-
+    --ring: 35 80% 65%;
+  }
 }
 
 @layer base {
