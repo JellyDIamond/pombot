@@ -16,7 +16,7 @@
     --card: 0 0% 100%;
     --card-foreground: 240 10% 3.9%;
 
-    --border: 240 5% 91%;
+    --border: 0 0% 0%; /* Black border for light mode */
     --input: 240 5% 91%;
 
     --primary: 240 5.9% 10%;
@@ -48,7 +48,7 @@
     --card: 30 100% 50%;            /* Chatbox background orange */
     --card-foreground: 0 0% 0%;     /* Text inside chatbox black */
 
-    --border: 30 100% 40%;          /* ✅ ORANGE border for cards and chatbox */
+    --border: 30 100% 40%;          /* Orange border for dark mode */
     --input: 30 100% 40%;
 
     --primary: 35 100% 70%;
@@ -71,8 +71,8 @@
     @apply bg-background text-foreground;
   }
 
-  /* ✅ Fix: remove unwanted borders between messages */
-  .dark .divide-y > * + * {
+  /* Remove unwanted borders between messages in both modes */
+  .divide-y > * + * {
     border-top-color: transparent !important;
   }
 }
