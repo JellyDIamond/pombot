@@ -36,20 +36,20 @@
     --radius: 0.5rem;
   }
 
-  .dark {
-    --background: 0 0% 0%;          /* Black background */
-    --foreground: 35 100% 88%;      /* Soft light orange text */
+    .dark {
+    --background: 0 0% 0%;
+    --foreground: 35 100% 88%;
 
-    --muted: 25 20% 15%;            /* Dark muted orange */
+    --muted: 25 20% 15%;
     --muted-foreground: 35 80% 70%;
 
-    --popover: 0 0% 0%;             /* Black */
+    --popover: 0 0% 0%;
     --popover-foreground: 35 100% 88%;
 
-    --card: 30 100% 50%;            /* Strong bright orange chatbox background */
-    --card-foreground: 0 0% 0%;     /* Black text inside chatbox */
+    --card: 30 100% 50%;
+    --card-foreground: 0 0% 0%;
 
-    --border: transparent;          /* 🔧 Changed from orange to transparent */
+    --border: 30 100% 40%;        /* 🍊 Orange borders */
     --input: 30 100% 40%;
 
     --primary: 35 100% 70%;
