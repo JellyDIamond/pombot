@@ -32,11 +32,10 @@
     --destructive-foreground: 0 0% 98%;
 
     --ring: 240 5% 64.9%;
-
     --radius: 0.5rem;
   }
 
-    .dark {
+  .dark {
     --background: 0 0% 0%;
     --foreground: 35 100% 88%;
 
@@ -49,7 +48,7 @@
     --card: 30 100% 50%;
     --card-foreground: 0 0% 0%;
 
-    --border: 30 100% 40%;        /* 🍊 Orange borders */
+    --border: 30 100% 40%;        /* Orange borders in dark mode */
     --input: 30 100% 40%;
 
     --primary: 35 100% 70%;
@@ -69,8 +68,23 @@
 }
 
 @layer base {
-  /* Removed universal border style */
+  * {
+    @apply border-border;
+  }
+
   body {
     @apply bg-background text-foreground;
+  }
+
+  /* 👇 Kill chat reply borders explicitly */
+  .dark .chat-reply {
+    border-top-width: 0 !important;
+    border-bottom-width: 0 !important;
+    border-color: transparent !important;
+  }
+
+  /* 👇 Optional: force borders to be orange elsewhere */
+  .dark *:not(.chat-reply) {
+    border-color: hsl(var(--border)) !important;
   }
 }
