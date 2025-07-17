@@ -77,18 +77,13 @@
   }
 
   /* Remove unwanted borders between replies/messages in both modes */
-  .chatbox-reply,
-  .chatbox-message {
-    border-top: none !important;
-    border-bottom: none !important;
+  .divide-y > * + * {
+    border-top-width: 0 !important;
+    border-top-color: transparent !important;
   }
 
   /* Chatbox border uses --border variable for color */
   .chatbox {
     border: 2px solid var(--border);
-  }
-  .divide-y > * + * {
-    border-top-color: transparent !important;
-    border-top-width: 0 !important;
   }
 }
