@@ -68,9 +68,8 @@ Your goals:
 1. Clarify the user’s real problem, desire, or question.
 2. Help remove what's unnecessary or distracting.
 3. Offer clean and powerful reflections — never ramble.
-  `.trim()
+`.trim()
 
-  // Claude doesn't accept a system message; prepend system prompt to first user message
   const messages = [
     {
       role: 'user',
@@ -86,36 +85,47 @@ Your goals:
     stream: true
   })
 
-  const stream = response.toReadableStream()
+  const reader = response.toReadableStream().getReader()
+  const encoder = new TextEncoder()
+  const decoder = new TextDecoder()
 
   const completionChunks: string[] = []
-  stream.on('data', (chunk: any) => {
-    const text = chunk?.completion ?? ''
-    completionChunks.push(text)
-  })
 
-  stream.on('end', async () => {
-    const completion = completionChunks.join('')
-    const title = json.messages[0].content.substring(0, 100)
-    const id = json.id ?? nanoid()
-    const createdAt = Date.now()
-    const path = `/chat/${id}`
-    const payload = {
-      id,
-      title,
-      userId,
-      createdAt,
-      path,
-      messages: [
-        ...userMessages,
-        {
-          role: 'assistant',
-          content: completion
-        }
-      ]
+  const stream = new ReadableStream({
+    async start(controller) {
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        const text = decoder.decode(value)
+        completionChunks.push(text)
+        controller.enqueue(encoder.encode(text))
+      }
+
+      const completion = completionChunks.join('')
+      const title = json.messages[0].content.substring(0, 100)
+      const id = json.id ?? nanoid()
+      const createdAt = Date.now()
+      const path = `/chat/${id}`
+
+      const payload = {
+        id,
+        title,
+        userId,
+        createdAt,
+        path,
+        messages: [
+          ...userMessages,
+          {
+            role: 'assistant',
+            content: completion
+          }
+        ]
+      }
+
+      await supabase.from('chats').upsert({ id, payload }).throwOnError()
+      controller.close()
     }
-
-    await supabase.from('chats').upsert({ id, payload }).throwOnError()
   })
 
   return new StreamingTextResponse(stream)
