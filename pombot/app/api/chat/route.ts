@@ -1,6 +1,6 @@
 import 'server-only'
-import { OpenAIStream, StreamingTextResponse } from 'ai'
-import { Configuration, OpenAIApi } from 'openai-edge'
+import { StreamingTextResponse } from 'ai'
+import Anthropic from '@anthropic-ai/sdk'
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { Database } from '@/lib/db_types'
@@ -9,11 +9,9 @@ import { nanoid } from '@/lib/utils'
 
 export const runtime = 'edge'
 
-const configuration = new Configuration({
-  apiKey: process.env.OPENAI_API_KEY
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY
 })
-
-const openai = new OpenAIApi(configuration)
 
 export async function POST(req: Request) {
   const cookieStore = cookies()
@@ -25,16 +23,13 @@ export async function POST(req: Request) {
   const userId = (await auth({ cookieStore }))?.user.id
 
   if (!userId) {
-    return new Response('Unauthorized', {
-      status: 401
-    })
+    return new Response('Unauthorized', { status: 401 })
   }
 
   if (previewToken) {
-    configuration.apiKey = previewToken
+    anthropic.apiKey = previewToken
   }
 
-  // Check if user has reached the monthly chat limit
   const now = new Date()
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
   const { count: chatCount, error: countError } = await supabase
@@ -47,7 +42,7 @@ export async function POST(req: Request) {
     return new Response('Failed to check chat limit', { status: 500 })
   }
   if ((chatCount ?? 0) >= 300) {
-    return new Response('Monthly chat limit reached (30).', { status: 403 })
+    return new Response('Monthly chat limit reached (300).', { status: 403 })
   }
 
   const systemPrompt = `
@@ -75,44 +70,52 @@ Your goals:
 3. Offer clean and powerful reflections — never ramble.
   `.trim()
 
+  // Claude doesn't accept a system message; prepend system prompt to first user message
   const messages = [
     {
-      role: 'system',
-      content: systemPrompt
+      role: 'user',
+      content: `${systemPrompt}\n\n${userMessages[0].content}`
     },
-    ...userMessages
+    ...userMessages.slice(1)
   ]
 
-  const res = await openai.createChatCompletion({
-    model: 'gpt-4-1106-preview', // GPT-4.1
+  const response = await anthropic.messages.create({
+    model: 'claude-3-sonnet-20240229',
+    max_tokens: 1024,
     messages,
-    temperature: 0.7,
     stream: true
   })
 
-  const stream = OpenAIStream(res, {
-    async onCompletion(completion) {
-      const title = json.messages[0].content.substring(0, 100)
-      const id = json.id ?? nanoid()
-      const createdAt = Date.now()
-      const path = `/chat/${id}`
-      const payload = {
-        id,
-        title,
-        userId,
-        createdAt,
-        path,
-        messages: [
-          ...userMessages,
-          {
-            role: 'assistant',
-            content: completion
-          }
-        ]
-      }
+  const stream = response.toReadableStream()
 
-      await supabase.from('chats').upsert({ id, payload }).throwOnError()
+  const completionChunks: string[] = []
+  stream.on('data', (chunk: any) => {
+    const text = chunk?.completion ?? ''
+    completionChunks.push(text)
+  })
+
+  stream.on('end', async () => {
+    const completion = completionChunks.join('')
+    const title = json.messages[0].content.substring(0, 100)
+    const id = json.id ?? nanoid()
+    const createdAt = Date.now()
+    const path = `/chat/${id}`
+    const payload = {
+      id,
+      title,
+      userId,
+      createdAt,
+      path,
+      messages: [
+        ...userMessages,
+        {
+          role: 'assistant',
+          content: completion
+        }
+      ]
     }
+
+    await supabase.from('chats').upsert({ id, payload }).throwOnError()
   })
 
   return new StreamingTextResponse(stream)
