@@ -37,15 +37,15 @@ export function PromptForm({
 
   return (
     <form
-      onSubmit={async e => {
-        e.preventDefault()
-        if (!input?.trim()) {
-          return
-        }
-        setInput('')
-        await onSubmit(input)
-      }}
-      ref={formRef}
+  onSubmit={async e => {
+    e.preventDefault()
+    if (!input?.trim()) {
+      return
+    }
+    await onSubmit(input) // moved this before
+    setInput('')          // clear after submit
+  }}
+  ref={formRef}
     >
       <div className="relative flex max-h-60 w-full grow flex-col overflow-hidden bg-background px-8 sm:rounded-md sm:border sm:px-12">
         <Tooltip>
