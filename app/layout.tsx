@@ -27,11 +27,15 @@ export const metadata: Metadata = {
   }
 }
 
+import type { ReactNode } from 'react'
+
 interface RootLayoutProps {
-  children: React.ReactNode
+  children: ReactNode
 }
 
-export default async function RootLayout({ children }: RootLayoutProps) {
+import type { ReactElement } from 'react'
+
+export default async function RootLayout({ children }: RootLayoutProps): Promise<ReactElement> {
   // ✅ Create Supabase server client
   const supabase = createServerComponentClient({ cookies })
 
