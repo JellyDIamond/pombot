@@ -66,6 +66,7 @@ export function ChatPanel({
                 content: value,
                 role: 'user'
               })
+              setInput('') // Clear input immediately after sending
             }}
             input={input}
             setInput={setInput}
