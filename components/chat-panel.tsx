@@ -1,3 +1,4 @@
+"use client"
 import { type UseChatHelpers } from 'ai/react'
 
 import { Button } from '@/components/ui/button'
