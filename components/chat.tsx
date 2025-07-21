@@ -45,33 +45,43 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
         previewToken
       },
       async onResponse(response) {
-        if (response.status === 401) {
-          toast.error(response.statusText)
-          return
-        }
-        // Custom streaming handler for Anthropic events
-        if (response.body) {
-          const reader = response.body.getReader()
-          const decoder = new TextDecoder()
-          setStreamingReply('')
-          while (true) {
-            const { done, value } = await reader.read()
-            if (done) break
-            const chunk = decoder.decode(value)
-            for (const line of chunk.split('\n')) {
-              if (!line.trim()) continue
-              try {
-                const event = JSON.parse(line)
-                if (event.type === 'content_block_delta' && event.delta?.text) {
-                  setStreamingReply(prev => prev + event.delta.text)
-                }
-              } catch (err) {
-                // Ignore non-JSON lines
-              }
-            }
+  if (response.status === 401) {
+    toast.error(response.statusText)
+    return
+  }
+  if (response.body) {
+    const reader = response.body.getReader()
+    const decoder = new TextDecoder()
+    let assistantText = ''
+    setStreamingReply('')
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      const chunk = decoder.decode(value)
+      for (const line of chunk.split('\n')) {
+        if (!line.trim()) continue
+        try {
+          const event = JSON.parse(line)
+          if (event.type === 'content_block_delta' && event.delta?.text) {
+            assistantText += event.delta.text
+            setStreamingReply(prev => prev + event.delta.text)
           }
+        } catch (err) {
+          // Ignore non-JSON lines
         }
       }
+    }
+    // Add the full reply to chat history
+    if (assistantText) {
+      append({
+        id: Math.random().toString(36).slice(2),
+        role: 'assistant',
+        content: assistantText
+      })
+    }
+    setStreamingReply('')
+  }
+}
     })
 
   return (
