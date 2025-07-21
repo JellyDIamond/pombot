@@ -1,0 +1,89 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 120 30% 80%;
+    --foreground: 240 10% 3.9%;
+
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+
+    --border: 0 0% 0%; /* Black for all borders in light mode */
+    --input: 240 5% 91%;
+
+    --primary: 240 5.9% 10%;
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    --ring: 240 5% 64.9%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 0 0% 0%;          /* Page background black */
+    --foreground: 35 100% 88%;      /* Text color */
+
+    --muted: 25 20% 15%;
+    --muted-foreground: 35 80% 70%;
+
+    --popover: 0 0% 0%;
+    --popover-foreground: 35 100% 88%;
+
+    --card: 30 100% 50%;            /* Chatbox background orange */
+    --card-foreground: 0 0% 0%;     /* Text inside chatbox black */
+
+    --border: 30 100% 40%;          /* Orange for all borders in dark mode */
+    --input: 30 100% 40%;
+
+    --primary: 35 100% 70%;
+    --primary-foreground: 0 0% 0%;
+
+    --secondary: 25 10% 25%;
+    --secondary-foreground: 35 100% 85%;
+
+    --accent: 30 60% 40%;
+    --accent-foreground: 35 100% 90%;
+
+    --destructive: 0 60% 50%;
+    --destructive-foreground: 0 0% 98%;
+
+    --ring: 35 80% 65%;
+  }
+
+  /* Apply border color globally to all elements */
+  * {
+    border-color: hsl(var(--border)) !important;
+  }
+
+  /* Only apply bg/text globally, NOT borders */
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  /* Remove unwanted borders between replies/messages in both modes */
+  .divide-y > * + * {
+    border-top-width: 0 !important;
+    border-top-color: transparent !important;
+  }
+
+  /* Chatbox border uses --border variable for color */
+  .chatbox {
+    border: 2px solid var(--border);
+  }
+}
