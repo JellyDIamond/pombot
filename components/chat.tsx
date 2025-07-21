@@ -34,6 +34,8 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
   )
   const [previewTokenDialog, setPreviewTokenDialog] = useState(IS_PREVIEW)
   const [previewTokenInput, setPreviewTokenInput] = useState(previewToken ?? '')
+  const [streamingReply, setStreamingReply] = useState('')
+
   const { messages, append, reload, stop, isLoading, input, setInput } =
     useChat({
       initialMessages,
@@ -42,18 +44,51 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
         id,
         previewToken
       },
-      onResponse(response) {
+      async onResponse(response) {
         if (response.status === 401) {
           toast.error(response.statusText)
+          return
+        }
+        // Custom streaming handler for Anthropic events
+        if (response.body) {
+          const reader = response.body.getReader()
+          const decoder = new TextDecoder()
+          setStreamingReply('')
+          while (true) {
+            const { done, value } = await reader.read()
+            if (done) break
+            const chunk = decoder.decode(value)
+            for (const line of chunk.split('\n')) {
+              if (!line.trim()) continue
+              try {
+                const event = JSON.parse(line)
+                if (event.type === 'content_block_delta' && event.delta?.text) {
+                  setStreamingReply(prev => prev + event.delta.text)
+                }
+              } catch (err) {
+                // Ignore non-JSON lines
+              }
+            }
+          }
         }
       }
     })
-    return (
+
+  return (
     <>
       <div className={cn('pb-[200px] pt-4 md:pt-10', className)}>
-  <ChatList messages={messages} />
-  <ChatScrollAnchor trackVisibility={isLoading} />
-</div>
+        <ChatList messages={messages} />
+        {isLoading && streamingReply && (
+          <div className="mx-auto max-w-2xl px-4">
+            <div className="chatbox-message ml-4 flex-1 space-y-2 overflow-hidden px-1">
+              <div className="prose break-words dark:prose-invert prose-p:leading-relaxed prose-pre:p-0">
+                {streamingReply}
+              </div>
+            </div>
+          </div>
+        )}
+        <ChatScrollAnchor trackVisibility={isLoading} />
+      </div>
 
       <ChatPanel
         id={id}
