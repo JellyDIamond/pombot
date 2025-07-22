@@ -88,7 +88,7 @@ If you need to ask a clarifying question, include it at the end of your response
 
   const response = await anthropic.messages.create({
     model: 'claude-4-sonnet-20250514',
-    max_tokens: 1024,
+    max_tokens: 300,
     temperature: 1,
     messages,
     stream: true
