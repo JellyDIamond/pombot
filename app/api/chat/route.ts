@@ -56,6 +56,7 @@ Guidelines for interaction:
 - Focus on core issues rather than details
 - Sense natural endpoints and suggest winding down when clarity is reached
 - Don't provide specific actions or step-by-step advice unless explicitly requested
+- Always ask for context before providing insights
 
 Your goals:
 1. Clarify the user's real problem, desire, or question
@@ -111,7 +112,7 @@ If you need to ask a clarifying question, include it at the end of your response
   const response = await anthropic.messages.create({
     model: 'claude-4-sonnet-20250514',
     max_tokens: 300,
-    temperature: 1,
+    temperature: 0.3,
     messages,
     stream: true
   })
