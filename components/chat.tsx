@@ -49,38 +49,13 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
           toast.error(response.statusText)
           return
         }
-        if (response.body) {
-          const reader = response.body.getReader()
-          const decoder = new TextDecoder()
-          setStreamingReply('')
-          while (true) {
-            const { done, value } = await reader.read()
-            if (done) break
-            const chunk = decoder.decode(value)
-            for (const line of chunk.split('\n')) {
-              if (!line.trim()) continue
-              try {
-                const event = JSON.parse(line)
-                if (event.type === 'content_block_delta' && event.delta?.text) {
-                  setStreamingReply(prev => prev + event.delta.text)
-                }
-              } catch (err) {
-                // Ignore non-JSON lines
-              }
-            }
-          }
-          setStreamingReply('')
-        }
-      },
-      async onFinish() {
-        setInput('')
       }
     })
 
   return (
     <>
       <div className={cn('pb-[200px] pt-4 md:pt-10', className)}>
-        <ChatList messages={messages} streamingReply={streamingReply} isLoading={isLoading} />
+        <ChatList messages={messages} isLoading={isLoading} />
         <ChatScrollAnchor trackVisibility={isLoading} />
       </div>
 
