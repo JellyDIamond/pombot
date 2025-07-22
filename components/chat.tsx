@@ -52,7 +52,6 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
         if (response.body) {
           const reader = response.body.getReader()
           const decoder = new TextDecoder()
-          let assistantText = ''
           setStreamingReply('')
           while (true) {
             const { done, value } = await reader.read()
@@ -63,21 +62,12 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
               try {
                 const event = JSON.parse(line)
                 if (event.type === 'content_block_delta' && event.delta?.text) {
-                  assistantText += event.delta.text
                   setStreamingReply(prev => prev + event.delta.text)
                 }
               } catch (err) {
                 // Ignore non-JSON lines
               }
             }
-          }
-          // Add the full reply to chat history
-          if (assistantText) {
-            append({
-              id: Math.random().toString(36).slice(2),
-              role: 'assistant',
-              content: assistantText
-            })
           }
           setStreamingReply('')
         }
@@ -90,16 +80,7 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
   return (
     <>
       <div className={cn('pb-[200px] pt-4 md:pt-10', className)}>
-        <ChatList messages={messages} />
-        {isLoading && streamingReply && (
-          <div className="mx-auto max-w-2xl px-4">
-            <div className="chatbox-message ml-4 flex-1 space-y-2 overflow-hidden px-1">
-              <div className="prose break-words dark:prose-invert prose-p:leading-relaxed prose-pre:p-0">
-                {streamingReply}
-              </div>
-            </div>
-          </div>
-        )}
+        <ChatList messages={messages} streamingReply={streamingReply} isLoading={isLoading} />
         <ChatScrollAnchor trackVisibility={isLoading} />
       </div>
 

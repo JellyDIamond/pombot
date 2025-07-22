@@ -106,8 +106,8 @@ Good: "What part of your business direction feels unclear to you?"
 
   const response = await anthropic.messages.create({
     model: 'claude-4-sonnet-20250514',
-    max_tokens: 300,
-    temperature: 0.3,
+    max_tokens: 500,
+    temperature: 0.6,
     messages,
     stream: true
   })
