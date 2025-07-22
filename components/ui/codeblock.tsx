@@ -106,26 +106,25 @@ const CodeBlock: FC<Props> = memo(({ language, value }) => {
           </Button>
         </div>
       </div>
-      <SyntaxHighlighter
-        language={language}
-        style={coldarkDark}
-        PreTag="div"
-        showLineNumbers
-        customStyle={{
+      {(SyntaxHighlighter as any)({
+        language: language,
+        style: coldarkDark,
+        PreTag: "div",
+        showLineNumbers: true,
+        customStyle: {
           margin: 0,
           width: '100%',
           background: 'transparent',
           padding: '1.5rem 1rem'
-        }}
-        codeTagProps={{
+        },
+        codeTagProps: {
           style: {
             fontSize: '0.9rem',
             fontFamily: 'var(--font-mono)'
           }
-        }}
-      >
-        {value}
-      </SyntaxHighlighter>
+        },
+        children: value
+      })}
     </div>
   )
 })
