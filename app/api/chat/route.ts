@@ -68,7 +68,7 @@ Here is the user's input:
 {{USER_INPUT}}
 </user_input>
 
-Analyze the user's input. Identify the core issue or question. Reflect on potential root causes or underlying factors. Formulate a response that addresses the user's needs while adhering to the guidelines above.
+ Formulate a response that addresses the user's needs while adhering to the guidelines above. Inquire and take your time before delivering a response
 
 Provide your response in the following format:
 [Your concise, insightful response here]
