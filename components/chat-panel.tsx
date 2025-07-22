@@ -61,12 +61,13 @@ export function ChatPanel({
         <div className="chatbox space-y-4 bg-background px-4 py-2 shadow-lg sm:rounded-t-xl md:py-4">
           <PromptForm
             onSubmit={async value => {
+              // Clear input IMMEDIATELY before sending
+              setInput('')
               await append({
                 id,
                 content: value,
                 role: 'user'
               })
-              setInput('') // Clear input immediately after sending
             }}
             input={input}
             setInput={setInput}
