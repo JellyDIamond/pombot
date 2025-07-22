@@ -106,7 +106,7 @@ Good: "What part of your business direction feels unclear to you?"
 
   const response = await anthropic.messages.create({
     model: 'claude-4-sonnet-20250514',
-    max_tokens: 500,
+    max_tokens: 600,
     temperature: 0.6,
     messages,
     stream: true
@@ -120,38 +120,59 @@ Good: "What part of your business direction feels unclear to you?"
 
   const stream = new ReadableStream({
     async start(controller) {
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
+      try {
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
 
-        const text = decoder.decode(value)
-        completionChunks.push(text)
-        controller.enqueue(encoder.encode(text))
-      }
-
-      const completion = completionChunks.join('')
-      const title = json.messages[0].content.substring(0, 100)
-      const id = json.id ?? nanoid()
-      const createdAt = Date.now()
-      const path = `/chat/${id}`
-
-      const payload = {
-        id,
-        title,
-        userId,
-        createdAt,
-        path,
-        messages: [
-          ...userMessages,
-          {
-            role: 'assistant',
-            content: completion
+          const text = decoder.decode(value)
+          const lines = text.split('\n')
+          
+          for (const line of lines) {
+            if (!line.trim()) continue
+            
+            try {
+              const event = JSON.parse(line)
+              
+              // Handle content deltas from Anthropic
+              if (event.type === 'content_block_delta' && event.delta?.text) {
+                const chunk = event.delta.text
+                completionChunks.push(chunk)
+                // Send in AI SDK format
+                controller.enqueue(encoder.encode(chunk))
+              }
+            } catch (err) {
+              // Ignore non-JSON lines
+            }
           }
-        ]
-      }
+        }
 
-      await supabase.from('chats').upsert({ id, payload }).throwOnError()
-      controller.close()
+        const completion = completionChunks.join('')
+        const title = json.messages[0].content.substring(0, 100)
+        const id = json.id ?? nanoid()
+        const createdAt = Date.now()
+        const path = `/chat/${id}`
+
+        const payload = {
+          id,
+          title,
+          userId,
+          createdAt,
+          path,
+          messages: [
+            ...userMessages,
+            {
+              role: 'assistant',
+              content: completion
+            }
+          ]
+        }
+
+        await supabase.from('chats').upsert({ id, payload }).throwOnError()
+        controller.close()
+      } catch (error) {
+        controller.error(error)
+      }
     }
   })
 
