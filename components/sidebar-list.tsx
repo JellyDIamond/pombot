@@ -7,15 +7,18 @@ export interface SidebarListProps {
 }
 
 export async function SidebarList({ userId }: SidebarListProps) {
+  console.log('SidebarList: userId =', userId)
   const chats = await getChats(userId)
+  console.log('SidebarList: chats =', chats, 'length =', chats?.length)
 
   return (
     <div className="flex-1 overflow-auto">
       {chats?.length ? (
         <div className="space-y-2 px-2">
           {chats.map(
-            chat =>
-              chat && (
+            chat => {
+              console.log('Rendering chat:', chat?.id, chat?.title)
+              return chat && (
                 <SidebarItem key={chat?.id} chat={chat}>
                   <SidebarActions
                     chat={chat}
@@ -24,6 +27,7 @@ export async function SidebarList({ userId }: SidebarListProps) {
                   />
                 </SidebarItem>
               )
+            }
           )}
         </div>
       ) : (

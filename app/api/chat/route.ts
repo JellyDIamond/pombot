@@ -153,7 +153,7 @@ Good: "What part of your business direction feels unclear to you?"
         const createdAt = Date.now()
         const path = `/chat/${id}`
 
-        const payload = {
+       const payload = {
           id,
           title,
           userId,
@@ -168,9 +168,18 @@ Good: "What part of your business direction feels unclear to you?"
           ]
         }
 
-        await supabase.from('chats').upsert({ id, payload }).throwOnError()
+        console.log('Saving chat with payload:', { id, title, userId, createdAt, path, messageCount: payload.messages.length })
+        const { data, error } = await supabase.from('chats').upsert({ id, payload, user_id: userId })
+        
+        if (error) {
+          console.error('Error saving chat:', error)
+        } else {
+          console.log('Chat saved successfully:', data)
+        }
+        
         controller.close()
       } catch (error) {
+        console.error('Error in stream:', error)
         controller.error(error)
       }
     }
