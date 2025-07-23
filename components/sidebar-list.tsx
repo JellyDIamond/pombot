@@ -7,7 +7,7 @@ export interface SidebarListProps {
 }
 
 export async function SidebarList({ userId }: SidebarListProps) {
-  console.log('SidebarList: userId =', userId)
+  console.log('SidebarList: userId =', userId, 'at', new Date().toISOString())
   const chats = await getChats(userId)
   console.log('SidebarList: chats =', chats, 'length =', chats?.length)
 

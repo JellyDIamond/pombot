@@ -9,6 +9,9 @@ import { redirect } from 'next/navigation'
 import { type Chat } from '@/lib/types'
 
 export async function getChats(userId?: string | null) {
+  console.log('🚀 getChats function START - this should always show')
+  console.log('getChats called with userId:', userId)
+  // ... rest of your existing code
   console.log('getChats called with userId:', userId)
   if (!userId) {
     console.log('No userId provided, returning empty array')
