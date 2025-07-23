@@ -6,7 +6,7 @@ import { auth } from '@/auth'
 import { clearChats } from '@/app/actions'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Sidebar } from '@/components/sidebar'
-import { SidebarList } from '@/components/sidebar-list'
+import { SidebarListServer } from '@/components/sidebar-list-server'
 import {
   IconSeparator
 } from '@/components/ui/icons'
@@ -26,8 +26,7 @@ export async function Header() {
         {session?.user ? (
           <Sidebar>
             <React.Suspense fallback={<div className="flex-1 overflow-auto" />}>
-              {/* @ts-ignore */}
-              <SidebarList userId={session?.user?.id} />
+              <SidebarListServer userId={session?.user?.id} />
             </React.Suspense>
             <SidebarFooter>
               <ThemeToggle />
@@ -38,16 +37,25 @@ export async function Header() {
 
         <div className="flex items-center">
           <IconSeparator className="h-6 w-6 text-muted-foreground/50" />
-          {session?.user ? (
-            <span className="ml-2 text-sm font-medium text-muted-foreground">
-              {session.user.email}
-            </span>
-          ) : (
-            <Button variant="link" asChild className="-ml-2">
-              <Link href="/sign-in">Login</Link>
-            </Button>
-          )}
+          <Link
+            href="/"
+            className={cn(
+              buttonVariants({ variant: 'link' }),
+              'h-6 px-2 text-xl font-bold'
+            )}
+          >
+            PomBot
+          </Link>
         </div>
+      </div>
+      <div className="flex items-center justify-end space-x-2">
+        {session?.user ? (
+          <UserMenu user={session.user} />
+        ) : (
+          <Button variant="link" asChild className="-ml-2">
+            <Link href="/sign-in">Login</Link>
+          </Button>
+        )}
       </div>
     </header>
   )
